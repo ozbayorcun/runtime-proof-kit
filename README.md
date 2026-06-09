@@ -16,25 +16,25 @@ It is built for AI-assisted coding, PR handoffs, demos, and lightweight QA where
 
 ## Quick Start
 
-Run directly from GitHub:
+Run directly from npm:
 
 ```bash
-npm exec --yes --package github:ozbayorcun/runtime-proof-kit -- \
+npm exec --yes --package runtime-proof-kit -- \
   runtime-proof check --url https://example.com --expect-text "Example Domain"
 ```
 
-Install in a project from GitHub:
-
-```bash
-npm install --save-dev github:ozbayorcun/runtime-proof-kit
-npx runtime-proof check --url https://example.com --expect-text "Example Domain"
-```
-
-The npm package name is available but not published yet. Once published, install will become:
+Install in a project:
 
 ```bash
 npm install --save-dev runtime-proof-kit
 npx runtime-proof check --url https://example.com --expect-text "Example Domain"
+```
+
+Prefer GitHub directly? That works too:
+
+```bash
+npm exec --yes --package github:ozbayorcun/runtime-proof-kit -- \
+  runtime-proof check --url https://example.com --expect-text "Example Domain"
 ```
 
 Clone the repo and run the bundled example:
