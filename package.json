@@ -4,7 +4,7 @@
   "description": "CLI for collecting proof that a local app or URL actually runs.",
   "type": "module",
   "bin": {
-    "runtime-proof": "./dist/cli.js"
+    "runtime-proof": "dist/cli.js"
   },
   "types": "./dist/types.d.ts",
   "files": [
@@ -15,6 +15,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "postbuild": "node scripts/mark-cli-executable.mjs",
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
     "check": "npm run build && npm run test",
