@@ -1,0 +1,19 @@
+{
+  "name": "basic-smoke",
+  "status": "passed",
+  "url": "http://127.0.0.1:4173",
+  "checks": [
+    {
+      "name": "url-reachable",
+      "status": "passed"
+    },
+    {
+      "name": "screenshot",
+      "status": "passed"
+    },
+    {
+      "name": "expect-text",
+      "status": "passed"
+    }
+  ]
+}
