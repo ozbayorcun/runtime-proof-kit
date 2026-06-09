@@ -1,9 +1,24 @@
 #!/usr/bin/env node
 import { parseArgs, usage, UsageError } from "./args.js";
 import { runCheck } from "./check.js";
+import { parseInitArgs, runInit } from "./init.js";
 
 async function main(): Promise<void> {
   try {
+    if (process.argv[2] === "init") {
+      if (process.argv[3] === "--help" || process.argv[3] === "-h") {
+        console.log(usage);
+        return;
+      }
+
+      const result = await runInit(parseInitArgs(process.argv.slice(3)));
+      console.log(`Config: ${result.configPath}`);
+      if (result.workflowPath) {
+        console.log(`Workflow: ${result.workflowPath}`);
+      }
+      return;
+    }
+
     const options = await parseArgs(process.argv.slice(2));
     const result = await runCheck(options);
     const icon = result.status === "passed" ? "PASS" : "FAIL";

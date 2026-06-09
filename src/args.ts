@@ -166,6 +166,7 @@ export const usage = `runtime-proof-kit
 Usage:
   runtime-proof check --url <url> [options]
   runtime-proof check --config runtime-proof.config.json
+  runtime-proof init [options]
 
 Options:
   --config <path>       JSON config file
@@ -177,4 +178,14 @@ Options:
   --out <dir>            Artifact directory, default: proof
   --timeout-ms <ms>      Startup/check timeout, default: 30000
   --viewport <WxH>       Browser viewport, default: 1440x900
+
+Init Options:
+  --template <name>      generic, next, or vite; default: generic
+  --config <path>        Config file to write, default: runtime-proof.config.json
+  --workflow <path>      CI workflow to write, default: .github/workflows/runtime-proof.yml
+  --url <url>            Override the generated URL
+  --command <cmd>        Override the generated dev command
+  --expect-text <text>   Override generated expected text; repeatable
+  --no-ci                Only write the config file
+  --force                Overwrite generated files
 `;

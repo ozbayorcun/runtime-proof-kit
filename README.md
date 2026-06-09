@@ -93,11 +93,37 @@ npx runtime-proof check --config runtime-proof.config.json
 
 CLI flags override config values.
 
+## Initialize A Project
+
+Generate a starter config and GitHub Actions workflow:
+
+```bash
+npx --yes runtime-proof-kit init --template next
+```
+
+Templates:
+
+| Template | Generated URL | Generated command |
+| --- | --- | --- |
+| `generic` | `http://127.0.0.1:3000` | `npm run dev` |
+| `next` | `http://127.0.0.1:3000` | `npm run dev -- --hostname 127.0.0.1 --port 3000` |
+| `vite` | `http://127.0.0.1:5173` | `npm run dev -- --host 127.0.0.1 --port 5173` |
+
+Then edit `runtime-proof.config.json` and replace the placeholder expected text with something visible on your page.
+
+Useful options:
+
+```bash
+npx --yes runtime-proof-kit init --template vite --expect-text "Dashboard" --force
+npx --yes runtime-proof-kit init --no-ci
+```
+
 ## CLI Reference
 
 ```text
 runtime-proof check --url <url> [options]
 runtime-proof check --config runtime-proof.config.json
+runtime-proof init [options]
 
 Options:
   --config <path>       JSON config file
@@ -109,6 +135,16 @@ Options:
   --out <dir>           Artifact directory, default: proof
   --timeout-ms <ms>     Startup/check timeout, default: 30000
   --viewport <WxH>      Browser viewport, default: 1440x900
+
+Init Options:
+  --template <name>     generic, next, or vite; default: generic
+  --config <path>       Config file to write, default: runtime-proof.config.json
+  --workflow <path>     CI workflow to write, default: .github/workflows/runtime-proof.yml
+  --url <url>           Override the generated URL
+  --command <cmd>       Override the generated dev command
+  --expect-text <text>  Override generated expected text; repeatable
+  --no-ci               Only write the config file
+  --force               Overwrite generated files
 ```
 
 ## Proof Report
@@ -168,7 +204,7 @@ Use `runtime-proof` as a small runtime gate in CI:
 - run: npm ci
 - run: npx playwright install --with-deps chromium
 - run: npm run check
-- run: npx runtime-proof check --config runtime-proof.config.json
+- run: npx --yes runtime-proof-kit check --config runtime-proof.config.json
 ```
 
 This repository's CI also uploads the generated `proof/` directory as a workflow artifact.
@@ -206,7 +242,6 @@ Proof bundles can include screenshots and logs. Review them before sharing publi
 - Multiple URL checks per run
 - Mobile and desktop screenshot sets
 - Console and network event logs
-- Markdown summary output
 - Video capture for short walkthroughs
 - Redaction rules for logs and screenshots
 
