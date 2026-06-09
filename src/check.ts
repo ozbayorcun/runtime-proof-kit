@@ -13,13 +13,17 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
   const stdoutPath = path.join(runDir, "stdout.log");
   const stderrPath = path.join(runDir, "stderr.log");
   const screenshotPath = path.join(runDir, "screenshot.png");
+  const consolePath = path.join(runDir, "console.ndjson");
+  const networkPath = path.join(runDir, "network.ndjson");
   const resultPath = path.join(runDir, "proof.json");
   const summaryPath = path.join(runDir, "summary.md");
 
   let child: ChildProcessWithoutNullStreams | undefined;
   const stdout: string[] = [];
   const stderr: string[] = [];
+  const consoleEvents: BrowserConsoleEvent[] = [];
   const consoleErrors: string[] = [];
+  const networkEvents: BrowserNetworkEvent[] = [];
   const checks: ProofResult["checks"] = [];
 
   try {
@@ -46,9 +50,53 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
     try {
       const page = await browser.newPage({ viewport: options.viewport });
       page.on("console", (message) => {
+        consoleEvents.push({
+          timestamp: new Date().toISOString(),
+          type: message.type(),
+          text: message.text(),
+          location: message.location(),
+        });
         if (message.type() === "error") {
           consoleErrors.push(message.text());
         }
+      });
+      page.on("pageerror", (error) => {
+        consoleEvents.push({
+          timestamp: new Date().toISOString(),
+          type: "pageerror",
+          text: error.message,
+        });
+        consoleErrors.push(error.message);
+      });
+      page.on("request", (request) => {
+        networkEvents.push({
+          timestamp: new Date().toISOString(),
+          event: "request",
+          method: request.method(),
+          url: request.url(),
+          resourceType: request.resourceType(),
+        });
+      });
+      page.on("response", (response) => {
+        networkEvents.push({
+          timestamp: new Date().toISOString(),
+          event: "response",
+          method: response.request().method(),
+          url: response.url(),
+          resourceType: response.request().resourceType(),
+          status: response.status(),
+          statusText: response.statusText(),
+        });
+      });
+      page.on("requestfailed", (request) => {
+        networkEvents.push({
+          timestamp: new Date().toISOString(),
+          event: "requestfailed",
+          method: request.method(),
+          url: request.url(),
+          resourceType: request.resourceType(),
+          failureText: request.failure()?.errorText,
+        });
       });
       await page.goto(options.url, { waitUntil: "networkidle", timeout: options.timeoutMs });
       await page.screenshot({ path: screenshotPath, fullPage: true });
@@ -80,6 +128,12 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
               : `Observed ${consoleErrors.length} browser console error(s)`,
         });
       }
+
+      checks.push({
+        name: "browser-event-logs",
+        status: "passed",
+        message: `Captured ${consoleEvents.length} console event(s) and ${networkEvents.length} network event(s)`,
+      });
     } finally {
       await browser.close();
     }
@@ -97,6 +151,8 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
 
   await writeFile(stdoutPath, stdout.join(""), "utf8");
   await writeFile(stderrPath, stderr.join(""), "utf8");
+  await writeJsonLines(consolePath, consoleEvents);
+  await writeJsonLines(networkPath, networkEvents);
 
   const finishedAtDate = new Date();
   const result: ProofResult = {
@@ -111,6 +167,8 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
       proof: relativeArtifact(resultPath, runDir),
       summary: relativeArtifact(summaryPath, runDir),
       screenshot: fileMaybeRelative(screenshotPath, runDir),
+      console: relativeArtifact(consolePath, runDir),
+      network: relativeArtifact(networkPath, runDir),
       stdout: relativeArtifact(stdoutPath, runDir),
       stderr: relativeArtifact(stderrPath, runDir),
     },
@@ -123,6 +181,33 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
   await writeFile(resultPath, `${JSON.stringify(result, null, 2)}\n`, "utf8");
   await writeFile(summaryPath, renderSummary(result), "utf8");
   return result;
+}
+
+type BrowserConsoleEvent = {
+  timestamp: string;
+  type: string;
+  text: string;
+  location?: {
+    url: string;
+    lineNumber: number;
+    columnNumber: number;
+  };
+};
+
+type BrowserNetworkEvent = {
+  timestamp: string;
+  event: "request" | "response" | "requestfailed";
+  method: string;
+  url: string;
+  resourceType: string;
+  status?: number;
+  statusText?: string;
+  failureText?: string;
+};
+
+async function writeJsonLines(filePath: string, events: Array<BrowserConsoleEvent | BrowserNetworkEvent>): Promise<void> {
+  const contents = events.map((event) => JSON.stringify(event)).join("\n");
+  await writeFile(filePath, contents ? `${contents}\n` : "", "utf8");
 }
 
 export async function runCheckSuite(options: CheckSuiteOptions): Promise<ProofSuiteResult> {
@@ -240,8 +325,9 @@ export function renderSuiteSummary(result: ProofSuiteResult): string {
     "",
     ...result.results.flatMap((check) => [
       `- ${check.status === "passed" ? "PASS" : "FAIL"} ${check.name}: ${check.url}`,
-      `  - proof: \`${check.artifacts.proof}\``,
-      `  - summary: \`${check.artifacts.summary}\``,
+      ...Object.entries(check.artifacts)
+        .filter((entry): entry is [string, string] => Boolean(entry[1]))
+        .map(([name, artifact]) => `  - ${name}: \`${artifact}\``),
     ]),
     "",
     "## Artifacts",

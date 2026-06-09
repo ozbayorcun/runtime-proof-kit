@@ -27,6 +27,8 @@ describe("renderSummary", () => {
         proof: "proof.json",
         summary: "summary.md",
         screenshot: "screenshot.png",
+        console: "console.ndjson",
+        network: "network.ndjson",
         stdout: "stdout.log",
         stderr: "stderr.log",
       },
@@ -55,6 +57,8 @@ describe("renderSummary", () => {
       - proof: \`proof.json\`
       - summary: \`summary.md\`
       - screenshot: \`screenshot.png\`
+      - console: \`console.ndjson\`
+      - network: \`network.ndjson\`
       - stdout: \`stdout.log\`
       - stderr: \`stderr.log\`
 
@@ -85,6 +89,8 @@ describe("renderSuiteSummary", () => {
             proof: "desktop-home/proof.json",
             summary: "desktop-home/summary.md",
             screenshot: "desktop-home/screenshot.png",
+            console: "desktop-home/console.ndjson",
+            network: "desktop-home/network.ndjson",
           },
         },
         {

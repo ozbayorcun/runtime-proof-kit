@@ -45,6 +45,8 @@ proof/
     proof.json
     summary.md
     screenshot.png
+    console.ndjson
+    network.ndjson
 ```
 
 ## Check A Local App
@@ -140,10 +142,14 @@ proof/
       proof.json
       summary.md
       screenshot.png
+      console.ndjson
+      network.ndjson
     mobile-home/
       proof.json
       summary.md
       screenshot.png
+      console.ndjson
+      network.ndjson
 ```
 
 ## Initialize A Project
@@ -206,6 +212,14 @@ Init Options:
 ## Proof Report
 
 `proof.json` is designed for machines. `summary.md` is designed for PR comments, CI artifacts, and agent handoffs.
+`console.ndjson` and `network.ndjson` are newline-delimited JSON streams for debugging browser console output, page errors, requests, responses, and failed requests.
+
+Example `network.ndjson` lines:
+
+```json
+{"timestamp":"2026-06-09T04:02:43.069Z","event":"request","method":"GET","url":"http://127.0.0.1:4173/","resourceType":"document"}
+{"timestamp":"2026-06-09T04:02:43.081Z","event":"response","method":"GET","url":"http://127.0.0.1:4173/","resourceType":"document","status":200,"statusText":"OK"}
+```
 
 ![Example proof screenshot](assets/readme/proof-screenshot.png)
 
@@ -246,6 +260,8 @@ Duration: 1.42s
     "proof": "proof.json",
     "summary": "summary.md",
     "screenshot": "screenshot.png",
+    "console": "console.ndjson",
+    "network": "network.ndjson",
     "stdout": "stdout.log",
     "stderr": "stderr.log"
   }
@@ -295,7 +311,6 @@ Proof bundles can include screenshots and logs. Review them before sharing publi
 
 ## Roadmap
 
-- Console and network event logs
 - Video capture for short walkthroughs
 - Redaction rules for logs and screenshots
 

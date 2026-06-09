@@ -20,6 +20,8 @@
     "proof": "proof.json",
     "summary": "summary.md",
     "screenshot": "screenshot.png",
+    "console": "console.ndjson",
+    "network": "network.ndjson",
     "stdout": "stdout.log",
     "stderr": "stderr.log"
   }

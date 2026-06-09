@@ -35,6 +35,8 @@ export type ProofResult = {
     proof: string;
     summary: string;
     screenshot?: string;
+    console?: string;
+    network?: string;
     stdout?: string;
     stderr?: string;
   };
