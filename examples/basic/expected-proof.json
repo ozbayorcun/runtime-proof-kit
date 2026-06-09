@@ -15,5 +15,11 @@
       "name": "expect-text",
       "status": "passed"
     }
-  ]
+  ],
+  "artifacts": {
+    "proof": "proof.json",
+    "screenshot": "screenshot.png",
+    "stdout": "stdout.log",
+    "stderr": "stderr.log"
+  }
 }

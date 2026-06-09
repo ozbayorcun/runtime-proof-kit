@@ -6,6 +6,7 @@
   "bin": {
     "runtime-proof": "./dist/cli.js"
   },
+  "types": "./dist/types.d.ts",
   "files": [
     "dist",
     "README.md",
@@ -15,7 +16,8 @@
     "build": "tsc",
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
-    "check": "npm run build && npm run test"
+    "check": "npm run build && npm run test",
+    "proof:example": "npm run dev -- check --config examples/config/runtime-proof.config.json"
   },
   "keywords": [
     "proof",
@@ -23,10 +25,20 @@
     "cli",
     "qa",
     "ai-coding",
-    "screenshots"
+    "screenshots",
+    "verification",
+    "smoke-test"
   ],
   "author": "Orcun Ozbay",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ozbayorcun/runtime-proof-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ozbayorcun/runtime-proof-kit/issues"
+  },
+  "homepage": "https://github.com/ozbayorcun/runtime-proof-kit#readme",
   "dependencies": {
     "playwright": "^1.57.0"
   },

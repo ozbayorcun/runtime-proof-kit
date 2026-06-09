@@ -1,0 +1,13 @@
+{
+  "name": "basic-smoke",
+  "command": "node examples/basic/server.mjs",
+  "url": "http://127.0.0.1:4173",
+  "expectText": ["Runtime Proof Kit", "expected text"],
+  "failOnConsoleError": true,
+  "outDir": "proof",
+  "timeoutMs": 30000,
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  }
+}

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { parseArgs } from "./args.js";
 
 describe("parseArgs", () => {
-  it("parses the check command", () => {
-    expect(
+  it("parses the check command", async () => {
+    await expect(
       parseArgs([
         "check",
         "--url",
@@ -15,10 +15,11 @@ describe("parseArgs", () => {
         "--viewport",
         "390x844",
       ]),
-    ).toEqual({
+    ).resolves.toEqual({
       url: "http://127.0.0.1:3000",
       command: undefined,
-      expectText: "Hello",
+      expectText: ["Hello"],
+      failOnConsoleError: false,
       name: "smoke",
       outDir: "proof",
       timeoutMs: 30000,
@@ -26,7 +27,25 @@ describe("parseArgs", () => {
     });
   });
 
-  it("requires a url", () => {
-    expect(() => parseArgs(["check"])).toThrow("Missing required --url");
+  it("supports repeatable expected text checks", async () => {
+    await expect(
+      parseArgs([
+        "check",
+        "--url",
+        "https://example.com",
+        "--expect-text",
+        "Example",
+        "--expect-text",
+        "Domain",
+        "--fail-on-console-error",
+      ]),
+    ).resolves.toMatchObject({
+      expectText: ["Example", "Domain"],
+      failOnConsoleError: true,
+    });
+  });
+
+  it("requires a url", async () => {
+    await expect(parseArgs(["check"])).rejects.toThrow("Missing required --url");
   });
 });

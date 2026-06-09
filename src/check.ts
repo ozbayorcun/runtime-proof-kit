@@ -6,7 +6,8 @@ import type { CheckOptions, ProofResult } from "./types.js";
 
 export async function runCheck(options: CheckOptions): Promise<ProofResult> {
   const startedAtDate = new Date();
-  const runDir = path.resolve(options.outDir, sanitizeName(options.name));
+  const runName = sanitizeName(options.name);
+  const runDir = path.resolve(options.outDir, runName);
   await mkdir(runDir, { recursive: true });
 
   const stdoutPath = path.join(runDir, "stdout.log");
@@ -17,6 +18,7 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
   let child: ChildProcessWithoutNullStreams | undefined;
   const stdout: string[] = [];
   const stderr: string[] = [];
+  const consoleErrors: string[] = [];
   const checks: ProofResult["checks"] = [];
 
   try {
@@ -41,6 +43,11 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
     const browser = await chromium.launch();
     try {
       const page = await browser.newPage({ viewport: options.viewport });
+      page.on("console", (message) => {
+        if (message.type() === "error") {
+          consoleErrors.push(message.text());
+        }
+      });
       await page.goto(options.url, { waitUntil: "networkidle", timeout: options.timeoutMs });
       await page.screenshot({ path: screenshotPath, fullPage: true });
       checks.push({
@@ -49,15 +56,26 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
         message: `Captured ${relativeArtifact(screenshotPath, runDir)}`,
       });
 
-      if (options.expectText) {
+      for (const expectedText of options.expectText) {
         const bodyText = await page.locator("body").innerText({ timeout: options.timeoutMs });
-        const found = bodyText.includes(options.expectText);
+        const found = bodyText.includes(expectedText);
         checks.push({
-          name: "expect-text",
+          name: `expect-text:${expectedText}`,
           status: found ? "passed" : "failed",
           message: found
-            ? `Found expected text: ${options.expectText}`
-            : `Did not find expected text: ${options.expectText}`,
+            ? `Found expected text: ${expectedText}`
+            : `Did not find expected text: ${expectedText}`,
+        });
+      }
+
+      if (options.failOnConsoleError) {
+        checks.push({
+          name: "console-errors",
+          status: consoleErrors.length === 0 ? "passed" : "failed",
+          message:
+            consoleErrors.length === 0
+              ? "No browser console errors observed"
+              : `Observed ${consoleErrors.length} browser console error(s)`,
         });
       }
     } finally {
@@ -80,7 +98,7 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
 
   const finishedAtDate = new Date();
   const result: ProofResult = {
-    name: options.name,
+    name: runName,
     status: checks.every((check) => check.status === "passed") ? "passed" : "failed",
     startedAt: startedAtDate.toISOString(),
     finishedAt: finishedAtDate.toISOString(),
@@ -88,6 +106,7 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
     url: options.url,
     checks,
     artifacts: {
+      proof: relativeArtifact(resultPath, runDir),
       screenshot: fileMaybeRelative(screenshotPath, runDir),
       stdout: relativeArtifact(stdoutPath, runDir),
       stderr: relativeArtifact(stderrPath, runDir),

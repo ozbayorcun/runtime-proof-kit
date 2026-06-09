@@ -1,12 +1,19 @@
 # runtime-proof-kit
 
-Collect proof that an app actually runs.
+Proof bundles for apps that are supposed to run.
 
-`runtime-proof-kit` is a small CLI for smoke-testing a local app or URL and saving the evidence: reachability, browser screenshot, expected text checks, process logs, and a structured `proof.json` report.
+`runtime-proof-kit` is a tiny CLI that checks a URL, optionally starts a local app first, opens the page in Playwright, asserts expected text, captures a screenshot, and writes a structured proof report.
 
-It is built for AI-assisted coding workflows where "I changed the app" is not enough. The repo, PR, or handoff should include a proof bundle.
+It is built for AI-assisted coding, PR handoffs, demos, and lightweight QA where "the code changed" is less useful than "the app started, rendered, and left evidence."
 
-## What It Produces
+## Quick Start
+
+```bash
+npm install
+npm run proof:example
+```
+
+That starts the bundled example app and writes:
 
 ```text
 proof/
@@ -17,56 +24,120 @@ proof/
     stderr.log
 ```
 
-`proof.json` records:
+## Use It Directly
 
-- URL checked
-- pass/fail status
-- checks performed
-- artifact filenames
-- duration
-- Node/platform metadata
-
-## Install
+Check any reachable URL:
 
 ```bash
-npm install
-npm run build
+npm run dev -- check \
+  --url https://example.com \
+  --expect-text "Example Domain"
 ```
 
-During local development:
-
-```bash
-npm run dev -- check --url https://example.com --expect-text "Example Domain"
-```
-
-After publishing or linking:
-
-```bash
-runtime-proof check --url https://example.com --expect-text "Example Domain"
-```
-
-## Check A Local App
-
-Use `--command` when the proof run should start the app first:
+Start a local app, wait for it, and collect proof:
 
 ```bash
 npm run dev -- check \
   --name basic-smoke \
   --command "node examples/basic/server.mjs" \
   --url http://127.0.0.1:4173 \
-  --expect-text "Runtime Proof Kit"
+  --expect-text "Runtime Proof Kit" \
+  --expect-text "expected text" \
+  --fail-on-console-error
 ```
 
-Options:
+After publishing or linking the package:
+
+```bash
+runtime-proof check --url https://example.com --expect-text "Example Domain"
+```
+
+## Use A Config File
+
+```bash
+npm run dev -- check --config examples/config/runtime-proof.config.json
+```
+
+Example:
+
+```json
+{
+  "name": "basic-smoke",
+  "command": "node examples/basic/server.mjs",
+  "url": "http://127.0.0.1:4173",
+  "expectText": ["Runtime Proof Kit", "expected text"],
+  "failOnConsoleError": true,
+  "outDir": "proof",
+  "timeoutMs": 30000,
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  }
+}
+```
+
+CLI flags override config values.
+
+## CLI Options
 
 ```text
---command <cmd>        Command to start before checking the URL
---expect-text <text>   Text that must appear on the page
---name <name>          Proof run name, default: runtime-proof
---out <dir>            Artifact directory, default: proof
---timeout-ms <ms>      Startup/check timeout, default: 30000
---viewport <WxH>       Browser viewport, default: 1440x900
+runtime-proof check --url <url> [options]
+runtime-proof check --config runtime-proof.config.json
+
+Options:
+  --config <path>       JSON config file
+  --command <cmd>       Command to start before checking the URL
+  --expect-text <text>  Text that must appear on the page; repeatable
+  --fail-on-console-error
+                        Fail if the page logs a console error
+  --name <name>         Proof run name, default: runtime-proof
+  --out <dir>           Artifact directory, default: proof
+  --timeout-ms <ms>     Startup/check timeout, default: 30000
+  --viewport <WxH>      Browser viewport, default: 1440x900
 ```
+
+## Proof Report
+
+`proof.json` is designed to be attached to PRs, CI artifacts, or agent handoffs.
+
+```json
+{
+  "name": "basic-smoke",
+  "status": "passed",
+  "url": "http://127.0.0.1:4173",
+  "checks": [
+    {
+      "name": "url-reachable",
+      "status": "passed",
+      "message": "http://127.0.0.1:4173 responded before timeout"
+    },
+    {
+      "name": "screenshot",
+      "status": "passed",
+      "message": "Captured screenshot.png"
+    }
+  ],
+  "artifacts": {
+    "proof": "proof.json",
+    "screenshot": "screenshot.png",
+    "stdout": "stdout.log",
+    "stderr": "stderr.log"
+  }
+}
+```
+
+## GitHub Actions
+
+The included workflow runs:
+
+```bash
+npm ci
+npx playwright install --with-deps chromium
+npm run check
+npm run proof:example
+```
+
+It uploads the generated `proof/` directory as a workflow artifact.
 
 ## Why This Exists
 
@@ -75,18 +146,21 @@ AI coding agents can produce a lot of code quickly, but teams still need simple 
 - starts cleanly
 - serves the intended page
 - renders in a browser
-- contains the expected user-facing state
+- contains expected user-facing state
 - leaves behind artifacts someone else can inspect
 
-This project is intentionally narrower than full end-to-end testing. It is a receipt generator for runtime sanity.
+This project is intentionally narrower than a full end-to-end test framework. It is a receipt generator for runtime sanity.
+
+## Artifact Safety
+
+Proof bundles can include screenshots and logs. Review them before sharing publicly.
 
 ## Roadmap
 
 - Multiple URL checks per run
 - Mobile and desktop screenshot sets
-- JSON config file support
-- Console error and network failure capture
-- GitHub Actions summary output
+- Console and network event logs
+- Markdown summary output
 - Video capture for short walkthroughs
 - Redaction rules for logs and screenshots
 
