@@ -6,21 +6,37 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D20-339933.svg)](package.json)
 [![Playwright](https://img.shields.io/badge/Playwright-ready-2ead33.svg)](https://playwright.dev/)
 
-Proof bundles for apps that are supposed to run.
+Runtime proof for AI-generated code.
 
-`runtime-proof-kit` is a tiny Playwright-powered CLI that opens a URL, checks expected text, captures a screenshot, and writes a structured proof report. It is built for AI-assisted coding, PR handoffs, demos, and lightweight QA where "the code changed" is less useful than "the app started, rendered, and left evidence."
+Stop accepting "it works on my machine" from coding agents. `runtime-proof-kit` starts your app, opens it in a real browser, checks user-visible text, captures screenshots and browser logs, and writes a PR-ready proof bundle that another human or agent can inspect.
+
+It is built for AI-assisted coding, agent handoffs, CI smoke checks, and lightweight QA where "the code changed" is less useful than "the app started, rendered, and left evidence."
 
 ![runtime-proof-kit demo](assets/readme/runtime-proof-demo.gif)
 
+## Why It Exists
+
+AI coding agents can ship changes quickly, but they often stop at "tests passed" or "implementation complete." Runtime proof adds the missing receipt:
+
+| Instead of accepting... | Ask for... |
+| --- | --- |
+| "I implemented it" | A browser screenshot of the rendered page |
+| "The app should run" | A URL reachability check with timeout evidence |
+| "The UI is there" | Expected user-facing text assertions |
+| "No obvious errors" | Captured console and network event logs |
+| "Ready for review" | `proof.json` and `summary.md` attached to the handoff |
+
+Use it when you want an agent, teammate, or CI job to prove that a web app actually starts and renders the thing it claims to have changed.
+
 ## Get Started
 
-Choose the path that fits your workflow:
+Pick the fastest path:
 
-| Workflow | Best for | Command |
+| Workflow | Use when | Command |
 | --- | --- | --- |
-| Try once | Checking any public URL | `npx --yes runtime-proof-kit check --url https://example.com --expect-text "Example Domain"` |
-| Add to a project | Repeated local or CI checks | `npm install --save-dev runtime-proof-kit` |
-| Use from GitHub | Testing unreleased `main` | `npm exec --yes --package github:ozbayorcun/runtime-proof-kit -- runtime-proof check ...` |
+| Prove a URL once | You need a quick receipt | `npx --yes runtime-proof-kit check --url https://example.com --expect-text "Example Domain"` |
+| Add proof to a repo | You want repeatable local or CI checks | `npm install --save-dev runtime-proof-kit` |
+| Try unreleased `main` | You want the newest code before npm | `npm exec --yes --package github:ozbayorcun/runtime-proof-kit -- runtime-proof check ...` |
 
 Run a one-off proof from npm:
 
@@ -51,7 +67,7 @@ proof/
 
 ## Check A Local App
 
-Start a local app, wait for it to respond, assert page text, and keep screenshots/logs:
+Start a local app, wait for it to respond, assert page text, and keep screenshots/logs for the handoff:
 
 ```bash
 npx runtime-proof check \
