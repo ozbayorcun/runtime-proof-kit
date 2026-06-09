@@ -14,6 +14,13 @@ It is built for AI-assisted coding, agent handoffs, CI smoke checks, and lightwe
 
 ![runtime-proof-kit demo](assets/readme/runtime-proof-demo.gif)
 
+## Guides
+
+- [AI coding agent verification](docs/ai-agent-workflows.md): use runtime proof as the handoff receipt for AI-generated code.
+- [GitHub Actions runtime proof](docs/github-actions.md): add screenshots, browser logs, and `summary.md` to pull request CI.
+- [Playwright smoke test CLI vs runtime proof](docs/playwright-vs-runtime-proof.md): where this fits next to a full Playwright test suite.
+- [Next.js example](examples/nextjs/README.md) and [Vite example](examples/vite/README.md): starter configs for common app stacks.
+
 ## Why It Exists
 
 AI coding agents can ship changes quickly, but they often stop at "tests passed" or "implementation complete." Runtime proof adds the missing receipt:
