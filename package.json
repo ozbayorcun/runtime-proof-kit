@@ -18,6 +18,8 @@
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
     "check": "npm run build && npm run test",
+    "prepare": "npm run build",
+    "prepack": "npm run build",
     "proof:example": "npm run dev -- check --config examples/config/runtime-proof.config.json",
     "assets:readme": "node scripts/capture-readme-assets.mjs"
   },

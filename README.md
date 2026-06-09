@@ -1,5 +1,11 @@
 # runtime-proof-kit
 
+[![CI](https://github.com/ozbayorcun/runtime-proof-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/ozbayorcun/runtime-proof-kit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D20-339933.svg)](package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6.svg)](https://www.typescriptlang.org/)
+[![Playwright](https://img.shields.io/badge/Playwright-ready-2ead33.svg)](https://playwright.dev/)
+
 Proof bundles for apps that are supposed to run.
 
 `runtime-proof-kit` is a tiny CLI that checks a URL, optionally starts a local app first, opens the page in Playwright, asserts expected text, captures a screenshot, and writes a structured proof report.
@@ -9,6 +15,29 @@ It is built for AI-assisted coding, PR handoffs, demos, and lightweight QA where
 ![runtime-proof-kit demo](assets/readme/runtime-proof-demo.gif)
 
 ## Quick Start
+
+Run directly from GitHub:
+
+```bash
+npm exec --yes --package github:ozbayorcun/runtime-proof-kit -- \
+  runtime-proof check --url https://example.com --expect-text "Example Domain"
+```
+
+Install in a project from GitHub:
+
+```bash
+npm install --save-dev github:ozbayorcun/runtime-proof-kit
+npx runtime-proof check --url https://example.com --expect-text "Example Domain"
+```
+
+The npm package name is available but not published yet. Once published, install will become:
+
+```bash
+npm install --save-dev runtime-proof-kit
+npx runtime-proof check --url https://example.com --expect-text "Example Domain"
+```
+
+Clone the repo and run the bundled example:
 
 ```bash
 npm install
@@ -48,10 +77,10 @@ npm run dev -- check \
   --fail-on-console-error
 ```
 
-After publishing or linking the package:
+After installing the package:
 
 ```bash
-runtime-proof check --url https://example.com --expect-text "Example Domain"
+npx runtime-proof check --url https://example.com --expect-text "Example Domain"
 ```
 
 ## Use A Config File
