@@ -14,6 +14,7 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
   const stderrPath = path.join(runDir, "stderr.log");
   const screenshotPath = path.join(runDir, "screenshot.png");
   const resultPath = path.join(runDir, "proof.json");
+  const summaryPath = path.join(runDir, "summary.md");
 
   let child: ChildProcessWithoutNullStreams | undefined;
   const stdout: string[] = [];
@@ -108,6 +109,7 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
     checks,
     artifacts: {
       proof: relativeArtifact(resultPath, runDir),
+      summary: relativeArtifact(summaryPath, runDir),
       screenshot: fileMaybeRelative(screenshotPath, runDir),
       stdout: relativeArtifact(stdoutPath, runDir),
       stderr: relativeArtifact(stderrPath, runDir),
@@ -119,7 +121,40 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
   };
 
   await writeFile(resultPath, `${JSON.stringify(result, null, 2)}\n`, "utf8");
+  await writeFile(summaryPath, renderSummary(result), "utf8");
   return result;
+}
+
+export function renderSummary(result: ProofResult): string {
+  const lines = [
+    `# Runtime Proof: ${result.name}`,
+    "",
+    `Status: ${result.status.toUpperCase()}`,
+    `URL: ${result.url}`,
+    `Duration: ${formatDuration(result.durationMs)}`,
+    `Started: ${result.startedAt}`,
+    `Finished: ${result.finishedAt}`,
+    "",
+    "## Checks",
+    "",
+    ...result.checks.flatMap((check) => [
+      `- ${check.status === "passed" ? "PASS" : "FAIL"} ${check.name}: ${check.message}`,
+    ]),
+    "",
+    "## Artifacts",
+    "",
+    ...Object.entries(result.artifacts)
+      .filter((entry): entry is [string, string] => Boolean(entry[1]))
+      .map(([name, artifact]) => `- ${name}: \`${artifact}\``),
+    "",
+    "## Environment",
+    "",
+    `- Node: ${result.environment.node}`,
+    `- Platform: ${result.environment.platform}`,
+    "",
+  ];
+
+  return `${lines.join("\n")}\n`;
 }
 
 async function waitForUrl(url: string, timeoutMs: number): Promise<void> {
@@ -190,4 +225,12 @@ function relativeArtifact(filePath: string, runDir: string): string {
 
 function fileMaybeRelative(filePath: string, runDir: string): string | undefined {
   return relativeArtifact(filePath, runDir);
+}
+
+function formatDuration(durationMs: number): string {
+  if (durationMs < 1000) {
+    return `${durationMs}ms`;
+  }
+
+  return `${(durationMs / 1000).toFixed(2)}s`;
 }

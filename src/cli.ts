@@ -9,6 +9,7 @@ async function main(): Promise<void> {
     const icon = result.status === "passed" ? "PASS" : "FAIL";
     console.log(`${icon} ${result.name}`);
     console.log(`Proof: ${options.outDir}/${result.name}/${result.artifacts.proof}`);
+    console.log(`Summary: ${options.outDir}/${result.name}/${result.artifacts.summary}`);
     process.exitCode = result.status === "passed" ? 0 : 1;
   } catch (error) {
     if (error instanceof UsageError) {

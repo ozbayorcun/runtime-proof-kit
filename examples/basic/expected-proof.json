@@ -18,6 +18,7 @@
   ],
   "artifacts": {
     "proof": "proof.json",
+    "summary": "summary.md",
     "screenshot": "screenshot.png",
     "stdout": "stdout.log",
     "stderr": "stderr.log"

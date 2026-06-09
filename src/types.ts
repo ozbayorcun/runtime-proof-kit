@@ -26,6 +26,7 @@ export type ProofResult = {
   }>;
   artifacts: {
     proof: string;
+    summary: string;
     screenshot?: string;
     stdout?: string;
     stderr?: string;

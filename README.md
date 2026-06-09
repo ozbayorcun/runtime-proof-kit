@@ -43,6 +43,7 @@ That creates a proof bundle:
 proof/
   runtime-proof/
     proof.json
+    summary.md
     screenshot.png
 ```
 
@@ -112,9 +113,25 @@ Options:
 
 ## Proof Report
 
-`proof.json` is designed to be attached to PRs, CI artifacts, or agent handoffs.
+`proof.json` is designed for machines. `summary.md` is designed for PR comments, CI artifacts, and agent handoffs.
 
 ![Example proof screenshot](assets/readme/proof-screenshot.png)
+
+Example `summary.md`:
+
+```markdown
+# Runtime Proof: basic-smoke
+
+Status: PASSED
+URL: http://127.0.0.1:4173
+Duration: 1.42s
+
+## Checks
+
+- PASS url-reachable: http://127.0.0.1:4173 responded before timeout
+- PASS screenshot: Captured screenshot.png
+- PASS expect-text:Runtime Proof Kit: Found expected text: Runtime Proof Kit
+```
 
 ```json
 {
@@ -135,6 +152,7 @@ Options:
   ],
   "artifacts": {
     "proof": "proof.json",
+    "summary": "summary.md",
     "screenshot": "screenshot.png",
     "stdout": "stdout.log",
     "stderr": "stderr.log"
