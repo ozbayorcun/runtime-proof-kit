@@ -40,6 +40,17 @@ jobs:
           path: proof/
 ```
 
+For coding-agent repositories, pair the workflow with a short PR-template requirement:
+
+```md
+For web-app changes, run:
+
+`npx runtime-proof check --config runtime-proof.config.json`
+
+Include the generated `summary.md`, screenshot path, console log path,
+and network log path before marking the work complete.
+```
+
 ## Generate The Files
 
 The initializer can write both a starter config and a GitHub Actions workflow:

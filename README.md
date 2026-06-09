@@ -200,6 +200,68 @@ npx --yes runtime-proof-kit init --template vite --expect-text "Dashboard" --for
 npx --yes runtime-proof-kit init --no-ci
 ```
 
+## Copy-Paste CI
+
+Add `runtime-proof.config.json` to your repo:
+
+```json
+{
+  "name": "pr-proof",
+  "command": "npm run dev",
+  "url": "http://127.0.0.1:3000",
+  "expectText": ["Dashboard"],
+  "failOnConsoleError": true,
+  "outDir": "proof",
+  "timeoutMs": 30000
+}
+```
+
+Then create `.github/workflows/runtime-proof.yml`:
+
+```yaml
+name: Runtime proof
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  runtime-proof:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npx runtime-proof check --config runtime-proof.config.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: runtime-proof
+          path: proof/
+```
+
+For coding-agent repositories, add this to your PR template or agent instructions:
+
+```md
+For web-app changes, run:
+
+`npx runtime-proof check --config runtime-proof.config.json`
+
+Include the generated `summary.md`, screenshot path, console log path, and network log path before marking the work complete.
+```
+
+See [GitHub Actions runtime proof](docs/github-actions.md) for multi-route checks and reviewer guidance.
+
 ## CLI Reference
 
 ```text
