@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
-import type { CheckOptions, ProofConfig } from "./types.js";
+import path from "node:path";
+import type { CheckOptions, CheckSuiteOptions, ProofConfig } from "./types.js";
 
 type RawArgs = {
   config?: string;
@@ -16,7 +17,7 @@ type RawArgs = {
   };
 };
 
-export async function parseArgs(argv: string[]): Promise<CheckOptions> {
+export async function parseArgs(argv: string[]): Promise<CheckOptions | CheckSuiteOptions> {
   const command = argv[0];
   if (!command || command === "help" || command === "--help" || command === "-h") {
     throw new UsageError();
@@ -50,6 +51,10 @@ export async function parseArgs(argv: string[]): Promise<CheckOptions> {
 
   const config = raw.config ? await readConfig(raw.config) : {};
   const merged = mergeConfig(config, raw);
+  if (merged.checks) {
+    return parseSuiteOptions(merged);
+  }
+
   const url = merged.url;
   if (!url) {
     throw new Error("Missing required --url or config url");
@@ -67,6 +72,10 @@ export async function parseArgs(argv: string[]): Promise<CheckOptions> {
     timeoutMs: merged.timeoutMs ?? 30_000,
     viewport: merged.viewport ?? parseViewport("1440x900"),
   };
+}
+
+export function isCheckSuiteOptions(options: CheckOptions | CheckSuiteOptions): options is CheckSuiteOptions {
+  return "checks" in options;
 }
 
 function assignValue(raw: RawArgs, key: string, value: string): void {
@@ -115,6 +124,9 @@ async function readConfig(filePath: string): Promise<ProofConfig> {
   if (config.expectText && !Array.isArray(config.expectText)) {
     throw new Error("Config expectText must be an array of strings");
   }
+  if (config.checks && !Array.isArray(config.checks)) {
+    throw new Error("Config checks must be an array");
+  }
   return config;
 }
 
@@ -130,6 +142,41 @@ function mergeConfig(config: ProofConfig, raw: RawArgs): ProofConfig {
     timeoutMs: raw.timeoutMs ?? config.timeoutMs,
     viewport: raw.viewport ?? config.viewport,
   };
+}
+
+function parseSuiteOptions(config: ProofConfig): CheckSuiteOptions {
+  if (!config.checks || config.checks.length === 0) {
+    throw new Error("Config checks must include at least one check");
+  }
+
+  return {
+    name: config.name ?? "runtime-proof",
+    command: config.command,
+    outDir: config.outDir ?? "proof",
+    checks: config.checks.map((check, index) => {
+      const url = check.url ?? config.url;
+      if (!url) {
+        throw new Error(`Missing url for config check ${index + 1}`);
+      }
+
+      validateUrl(url);
+
+      return {
+        url,
+        command: check.command,
+        expectText: check.expectText ?? config.expectText ?? [],
+        failOnConsoleError: check.failOnConsoleError ?? config.failOnConsoleError ?? false,
+        name: check.name ?? `check-${index + 1}`,
+        outDir: pathForSuiteCheck(config.outDir ?? "proof", config.name ?? "runtime-proof"),
+        timeoutMs: check.timeoutMs ?? config.timeoutMs ?? 30_000,
+        viewport: check.viewport ?? config.viewport ?? parseViewport("1440x900"),
+      };
+    }),
+  };
+}
+
+function pathForSuiteCheck(outDir: string, suiteName: string): string {
+  return path.join(outDir, sanitizeName(suiteName));
 }
 
 function parseViewport(value: string): { width: number; height: number } {
@@ -155,6 +202,10 @@ function validateUrl(url: string): void {
   }
 }
 
+function sanitizeName(name: string): string {
+  return name.replace(/[^a-z0-9._-]+/gi, "-").replace(/^-|-$/g, "") || "runtime-proof";
+}
+
 export class UsageError extends Error {
   constructor() {
     super("Usage requested");
@@ -178,6 +229,9 @@ Options:
   --out <dir>            Artifact directory, default: proof
   --timeout-ms <ms>      Startup/check timeout, default: 30000
   --viewport <WxH>       Browser viewport, default: 1440x900
+
+Config:
+  checks                Optional array of named checks for one multi-page proof run
 
 Init Options:
   --template <name>      generic, next, or vite; default: generic

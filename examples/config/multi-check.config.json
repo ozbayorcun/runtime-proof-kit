@@ -1,0 +1,26 @@
+{
+  "name": "multi-smoke",
+  "command": "node examples/basic/server.mjs",
+  "url": "http://127.0.0.1:4173",
+  "failOnConsoleError": true,
+  "outDir": "proof",
+  "timeoutMs": 30000,
+  "checks": [
+    {
+      "name": "desktop-home",
+      "expectText": ["Runtime Proof Kit"],
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "name": "mobile-home",
+      "expectText": ["expected text"],
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    }
+  ]
+}

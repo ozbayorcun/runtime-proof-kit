@@ -12,6 +12,13 @@ export type CheckOptions = {
   };
 };
 
+export type CheckSuiteOptions = {
+  name: string;
+  command?: string;
+  outDir: string;
+  checks: CheckOptions[];
+};
+
 export type ProofResult = {
   name: string;
   status: "passed" | "failed";
@@ -37,9 +44,42 @@ export type ProofResult = {
   };
 };
 
+export type ProofSuiteResult = {
+  name: string;
+  status: "passed" | "failed";
+  startedAt: string;
+  finishedAt: string;
+  durationMs: number;
+  results: Array<{
+    name: string;
+    status: "passed" | "failed";
+    url: string;
+    artifacts: ProofResult["artifacts"];
+  }>;
+  artifacts: {
+    proof: string;
+    summary: string;
+    stdout?: string;
+    stderr?: string;
+  };
+  environment: {
+    node: string;
+    platform: string;
+  };
+};
+
 export type ProofConfig = Partial<
   Pick<
     CheckOptions,
     "url" | "command" | "expectText" | "failOnConsoleError" | "name" | "outDir" | "timeoutMs" | "viewport"
   >
->;
+> & {
+  checks?: Array<
+    Partial<
+      Pick<
+        CheckOptions,
+        "url" | "command" | "expectText" | "failOnConsoleError" | "name" | "timeoutMs" | "viewport"
+      >
+    >
+  >;
+};

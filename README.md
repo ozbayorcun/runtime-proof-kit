@@ -93,6 +93,59 @@ npx runtime-proof check --config runtime-proof.config.json
 
 CLI flags override config values.
 
+## Run Multiple Checks
+
+Use `checks` when one proof should cover more than one route, viewport, or page assertion. Top-level values act as defaults; each check can override `url`, `expectText`, `viewport`, `timeoutMs`, or `failOnConsoleError`.
+
+```json
+{
+  "name": "multi-smoke",
+  "command": "npm run dev",
+  "url": "http://127.0.0.1:3000",
+  "failOnConsoleError": true,
+  "checks": [
+    {
+      "name": "desktop-home",
+      "expectText": ["Dashboard"],
+      "viewport": { "width": 1440, "height": 900 }
+    },
+    {
+      "name": "mobile-home",
+      "expectText": ["Dashboard"],
+      "viewport": { "width": 390, "height": 844 }
+    },
+    {
+      "name": "health",
+      "url": "http://127.0.0.1:3000/health",
+      "expectText": ["ok"]
+    }
+  ]
+}
+```
+
+Run it the same way:
+
+```bash
+npx runtime-proof check --config runtime-proof.config.json
+```
+
+That writes an aggregate suite report plus one proof bundle per check:
+
+```text
+proof/
+  multi-smoke/
+    proof.json
+    summary.md
+    desktop-home/
+      proof.json
+      summary.md
+      screenshot.png
+    mobile-home/
+      proof.json
+      summary.md
+      screenshot.png
+```
+
 ## Initialize A Project
 
 Generate a starter config and GitHub Actions workflow:
@@ -135,6 +188,9 @@ Options:
   --out <dir>           Artifact directory, default: proof
   --timeout-ms <ms>     Startup/check timeout, default: 30000
   --viewport <WxH>      Browser viewport, default: 1440x900
+
+Config:
+  checks               Optional array of named checks for one multi-page proof run
 
 Init Options:
   --template <name>     generic, next, or vite; default: generic
@@ -239,8 +295,6 @@ Proof bundles can include screenshots and logs. Review them before sharing publi
 
 ## Roadmap
 
-- Multiple URL checks per run
-- Mobile and desktop screenshot sets
 - Console and network event logs
 - Video capture for short walkthroughs
 - Redaction rules for logs and screenshots

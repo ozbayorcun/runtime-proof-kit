@@ -2,7 +2,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
-import type { CheckOptions, ProofResult } from "./types.js";
+import type { CheckOptions, CheckSuiteOptions, ProofResult, ProofSuiteResult } from "./types.js";
 
 export async function runCheck(options: CheckOptions): Promise<ProofResult> {
   const startedAtDate = new Date();
@@ -125,6 +125,76 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
   return result;
 }
 
+export async function runCheckSuite(options: CheckSuiteOptions): Promise<ProofSuiteResult> {
+  const startedAtDate = new Date();
+  const suiteName = sanitizeName(options.name);
+  const suiteDir = path.resolve(options.outDir, suiteName);
+  await mkdir(suiteDir, { recursive: true });
+
+  const stdoutPath = path.join(suiteDir, "stdout.log");
+  const stderrPath = path.join(suiteDir, "stderr.log");
+  const resultPath = path.join(suiteDir, "proof.json");
+  const summaryPath = path.join(suiteDir, "summary.md");
+
+  let child: ChildProcessWithoutNullStreams | undefined;
+  const stdout: string[] = [];
+  const stderr: string[] = [];
+
+  try {
+    if (options.command) {
+      child = spawn(options.command, {
+        shell: true,
+        detached: process.platform !== "win32",
+        stdio: "pipe",
+        env: process.env,
+      });
+
+      child.stdout.on("data", (chunk: Buffer) => stdout.push(chunk.toString()));
+      child.stderr.on("data", (chunk: Buffer) => stderr.push(chunk.toString()));
+    }
+
+    const results = [];
+    for (const check of options.checks) {
+      results.push(await runCheck({ ...check, command: check.command }));
+    }
+
+    const finishedAtDate = new Date();
+    const result: ProofSuiteResult = {
+      name: suiteName,
+      status: results.every((check) => check.status === "passed") ? "passed" : "failed",
+      startedAt: startedAtDate.toISOString(),
+      finishedAt: finishedAtDate.toISOString(),
+      durationMs: finishedAtDate.getTime() - startedAtDate.getTime(),
+      results: results.map((check) => ({
+        name: check.name,
+        status: check.status,
+        url: check.url,
+        artifacts: prefixArtifacts(check.artifacts, check.name),
+      })),
+      artifacts: {
+        proof: relativeArtifact(resultPath, suiteDir),
+        summary: relativeArtifact(summaryPath, suiteDir),
+        stdout: relativeArtifact(stdoutPath, suiteDir),
+        stderr: relativeArtifact(stderrPath, suiteDir),
+      },
+      environment: {
+        node: process.version,
+        platform: process.platform,
+      },
+    };
+
+    await writeFile(stdoutPath, stdout.join(""), "utf8");
+    await writeFile(stderrPath, stderr.join(""), "utf8");
+    await writeFile(resultPath, `${JSON.stringify(result, null, 2)}\n`, "utf8");
+    await writeFile(summaryPath, renderSuiteSummary(result), "utf8");
+    return result;
+  } finally {
+    if (child) {
+      await terminateChild(child);
+    }
+  }
+}
+
 export function renderSummary(result: ProofResult): string {
   const lines = [
     `# Runtime Proof: ${result.name}`,
@@ -155,6 +225,47 @@ export function renderSummary(result: ProofResult): string {
   ];
 
   return `${lines.join("\n")}\n`;
+}
+
+export function renderSuiteSummary(result: ProofSuiteResult): string {
+  const lines = [
+    `# Runtime Proof: ${result.name}`,
+    "",
+    `Status: ${result.status.toUpperCase()}`,
+    `Duration: ${formatDuration(result.durationMs)}`,
+    `Started: ${result.startedAt}`,
+    `Finished: ${result.finishedAt}`,
+    "",
+    "## Checks",
+    "",
+    ...result.results.flatMap((check) => [
+      `- ${check.status === "passed" ? "PASS" : "FAIL"} ${check.name}: ${check.url}`,
+      `  - proof: \`${check.artifacts.proof}\``,
+      `  - summary: \`${check.artifacts.summary}\``,
+    ]),
+    "",
+    "## Artifacts",
+    "",
+    ...Object.entries(result.artifacts)
+      .filter((entry): entry is [string, string] => Boolean(entry[1]))
+      .map(([name, artifact]) => `- ${name}: \`${artifact}\``),
+    "",
+    "## Environment",
+    "",
+    `- Node: ${result.environment.node}`,
+    `- Platform: ${result.environment.platform}`,
+    "",
+  ];
+
+  return `${lines.join("\n")}\n`;
+}
+
+function prefixArtifacts(artifacts: ProofResult["artifacts"], checkName: string): ProofResult["artifacts"] {
+  return Object.fromEntries(
+    Object.entries(artifacts)
+      .filter((entry): entry is [string, string] => Boolean(entry[1]))
+      .map(([key, value]) => [key, `${checkName}/${value}`]),
+  ) as ProofResult["artifacts"];
 }
 
 async function waitForUrl(url: string, timeoutMs: number): Promise<void> {

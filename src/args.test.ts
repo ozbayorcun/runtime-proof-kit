@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseArgs } from "./args.js";
+import { isCheckSuiteOptions, parseArgs } from "./args.js";
 
 describe("parseArgs", () => {
   it("parses the check command", async () => {
@@ -47,5 +47,36 @@ describe("parseArgs", () => {
 
   it("requires a url", async () => {
     await expect(parseArgs(["check"])).rejects.toThrow("Missing required --url");
+  });
+
+  it("parses multi-check config files", async () => {
+    const options = await parseArgs(["check", "--config", "examples/config/multi-check.config.json"]);
+
+    expect(isCheckSuiteOptions(options)).toBe(true);
+    if (!isCheckSuiteOptions(options)) {
+      throw new Error("Expected suite options");
+    }
+
+    expect(options).toMatchObject({
+      name: "multi-smoke",
+      command: "node examples/basic/server.mjs",
+      outDir: "proof",
+      checks: [
+        {
+          name: "desktop-home",
+          url: "http://127.0.0.1:4173",
+          expectText: ["Runtime Proof Kit"],
+          outDir: "proof/multi-smoke",
+          viewport: { width: 1440, height: 900 },
+        },
+        {
+          name: "mobile-home",
+          url: "http://127.0.0.1:4173",
+          expectText: ["expected text"],
+          outDir: "proof/multi-smoke",
+          viewport: { width: 390, height: 844 },
+        },
+      ],
+    });
   });
 });

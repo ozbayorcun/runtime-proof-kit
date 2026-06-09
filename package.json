@@ -1,6 +1,6 @@
 {
   "name": "runtime-proof-kit",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "CLI for collecting proof that a local app or URL actually runs.",
   "type": "module",
   "bin": {
@@ -22,6 +22,7 @@
     "prepare": "npm run build",
     "prepack": "npm run build",
     "proof:example": "npm run dev -- check --config examples/config/runtime-proof.config.json",
+    "proof:multi": "npm run dev -- check --config examples/config/multi-check.config.json",
     "assets:readme": "node scripts/capture-readme-assets.mjs"
   },
   "keywords": [
