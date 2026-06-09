@@ -1,6 +1,6 @@
 {
   "name": "runtime-proof-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI for collecting proof that a local app or URL actually runs.",
   "type": "module",
   "bin": {
