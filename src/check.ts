@@ -25,6 +25,7 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
     if (options.command) {
       child = spawn(options.command, {
         shell: true,
+        detached: process.platform !== "win32",
         stdio: "pipe",
         env: process.env,
       });
@@ -88,8 +89,8 @@ export async function runCheck(options: CheckOptions): Promise<ProofResult> {
       message: error instanceof Error ? error.message : String(error),
     });
   } finally {
-    if (child && !child.killed) {
-      child.kill("SIGTERM");
+    if (child) {
+      await terminateChild(child);
     }
   }
 
@@ -144,6 +145,39 @@ async function waitForUrl(url: string, timeoutMs: number): Promise<void> {
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function terminateChild(child: ChildProcessWithoutNullStreams): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return;
+  }
+
+  signalChild(child, "SIGTERM");
+  await Promise.race([waitForExit(child), delay(1_000)]);
+
+  if (child.exitCode === null && child.signalCode === null) {
+    signalChild(child, "SIGKILL");
+    await Promise.race([waitForExit(child), delay(1_000)]);
+  }
+}
+
+function signalChild(child: ChildProcessWithoutNullStreams, signal: NodeJS.Signals): void {
+  try {
+    if (process.platform !== "win32" && child.pid) {
+      process.kill(-child.pid, signal);
+      return;
+    }
+  } catch {
+    // Fall back to signaling the shell process directly.
+  }
+
+  child.kill(signal);
+}
+
+function waitForExit(child: ChildProcessWithoutNullStreams): Promise<void> {
+  return new Promise((resolve) => {
+    child.once("exit", () => resolve());
+  });
 }
 
 function sanitizeName(name: string): string {
