@@ -10,14 +10,16 @@
   "files": [
     "dist",
     "README.md",
-    "examples"
+    "examples",
+    "assets/readme"
   ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
     "check": "npm run build && npm run test",
-    "proof:example": "npm run dev -- check --config examples/config/runtime-proof.config.json"
+    "proof:example": "npm run dev -- check --config examples/config/runtime-proof.config.json",
+    "assets:readme": "node scripts/capture-readme-assets.mjs"
   },
   "keywords": [
     "proof",

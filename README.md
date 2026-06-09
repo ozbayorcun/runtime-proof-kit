@@ -6,6 +6,8 @@ Proof bundles for apps that are supposed to run.
 
 It is built for AI-assisted coding, PR handoffs, demos, and lightweight QA where "the code changed" is less useful than "the app started, rendered, and left evidence."
 
+![runtime-proof-kit demo](assets/readme/runtime-proof-demo.gif)
+
 ## Quick Start
 
 ```bash
@@ -100,6 +102,8 @@ Options:
 
 `proof.json` is designed to be attached to PRs, CI artifacts, or agent handoffs.
 
+![Example proof screenshot](assets/readme/proof-screenshot.png)
+
 ```json
 {
   "name": "basic-smoke",
@@ -138,6 +142,16 @@ npm run proof:example
 ```
 
 It uploads the generated `proof/` directory as a workflow artifact.
+
+## README Assets
+
+Regenerate the screenshot and GIF used in this README:
+
+```bash
+npm run assets:readme
+```
+
+This runs the example proof, copies the captured page screenshot, and uses Playwright plus `ffmpeg` to produce the short GIF.
 
 ## Why This Exists
 
