@@ -1,95 +1,78 @@
 # runtime-proof-kit
 
+[![npm version](https://img.shields.io/npm/v/runtime-proof-kit.svg)](https://www.npmjs.com/package/runtime-proof-kit)
 [![CI](https://github.com/ozbayorcun/runtime-proof-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/ozbayorcun/runtime-proof-kit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20-339933.svg)](package.json)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6.svg)](https://www.typescriptlang.org/)
 [![Playwright](https://img.shields.io/badge/Playwright-ready-2ead33.svg)](https://playwright.dev/)
 
 Proof bundles for apps that are supposed to run.
 
-`runtime-proof-kit` is a tiny CLI that checks a URL, optionally starts a local app first, opens the page in Playwright, asserts expected text, captures a screenshot, and writes a structured proof report.
-
-It is built for AI-assisted coding, PR handoffs, demos, and lightweight QA where "the code changed" is less useful than "the app started, rendered, and left evidence."
+`runtime-proof-kit` is a tiny Playwright-powered CLI that opens a URL, checks expected text, captures a screenshot, and writes a structured proof report. It is built for AI-assisted coding, PR handoffs, demos, and lightweight QA where "the code changed" is less useful than "the app started, rendered, and left evidence."
 
 ![runtime-proof-kit demo](assets/readme/runtime-proof-demo.gif)
 
-## Quick Start
+## Get Started
 
-Run directly from npm:
+Choose the path that fits your workflow:
+
+| Workflow | Best for | Command |
+| --- | --- | --- |
+| Try once | Checking any public URL | `npx --yes runtime-proof-kit check --url https://example.com --expect-text "Example Domain"` |
+| Add to a project | Repeated local or CI checks | `npm install --save-dev runtime-proof-kit` |
+| Use from GitHub | Testing unreleased `main` | `npm exec --yes --package github:ozbayorcun/runtime-proof-kit -- runtime-proof check ...` |
+
+Run a one-off proof from npm:
 
 ```bash
-npm exec --yes --package runtime-proof-kit -- \
-  runtime-proof check --url https://example.com --expect-text "Example Domain"
+npx --yes runtime-proof-kit check \
+  --url https://example.com \
+  --expect-text "Example Domain"
 ```
 
-Install in a project:
+After installing in a project:
 
 ```bash
 npm install --save-dev runtime-proof-kit
 npx runtime-proof check --url https://example.com --expect-text "Example Domain"
 ```
 
-Prefer GitHub directly? That works too:
+That creates a proof bundle:
 
-```bash
-npm exec --yes --package github:ozbayorcun/runtime-proof-kit -- \
-  runtime-proof check --url https://example.com --expect-text "Example Domain"
+```text
+proof/
+  runtime-proof/
+    proof.json
+    screenshot.png
 ```
 
-Clone the repo and run the bundled example:
+## Check A Local App
+
+Start a local app, wait for it to respond, assert page text, and keep screenshots/logs:
+
+```bash
+npx runtime-proof check \
+  --name basic-smoke \
+  --command "npm run dev" \
+  --url http://127.0.0.1:3000 \
+  --expect-text "Dashboard" \
+  --fail-on-console-error
+```
+
+For this repository's bundled example:
 
 ```bash
 npm install
 npm run proof:example
 ```
 
-That starts the bundled example app and writes:
-
-```text
-proof/
-  basic-smoke/
-    proof.json
-    screenshot.png
-    stdout.log
-    stderr.log
-```
-
-## Use It Directly
-
-Check any reachable URL:
-
-```bash
-npm run dev -- check \
-  --url https://example.com \
-  --expect-text "Example Domain"
-```
-
-Start a local app, wait for it, and collect proof:
-
-```bash
-npm run dev -- check \
-  --name basic-smoke \
-  --command "node examples/basic/server.mjs" \
-  --url http://127.0.0.1:4173 \
-  --expect-text "Runtime Proof Kit" \
-  --expect-text "expected text" \
-  --fail-on-console-error
-```
-
-After installing the package:
-
-```bash
-npx runtime-proof check --url https://example.com --expect-text "Example Domain"
-```
-
 ## Use A Config File
 
-```bash
-npm run dev -- check --config examples/config/runtime-proof.config.json
-```
+Keep repeatable checks in JSON:
 
-Example:
+```bash
+npx runtime-proof check --config runtime-proof.config.json
+```
 
 ```json
 {
@@ -109,7 +92,7 @@ Example:
 
 CLI flags override config values.
 
-## CLI Options
+## CLI Reference
 
 ```text
 runtime-proof check --url <url> [options]
@@ -161,26 +144,16 @@ Options:
 
 ## GitHub Actions
 
-The included workflow runs:
+Use `runtime-proof` as a small runtime gate in CI:
 
-```bash
-npm ci
-npx playwright install --with-deps chromium
-npm run check
-npm run proof:example
+```yaml
+- run: npm ci
+- run: npx playwright install --with-deps chromium
+- run: npm run check
+- run: npx runtime-proof check --config runtime-proof.config.json
 ```
 
-It uploads the generated `proof/` directory as a workflow artifact.
-
-## README Assets
-
-Regenerate the screenshot and GIF used in this README:
-
-```bash
-npm run assets:readme
-```
-
-This runs the example proof, copies the captured page screenshot, and uses Playwright plus `ffmpeg` to produce the short GIF.
+This repository's CI also uploads the generated `proof/` directory as a workflow artifact.
 
 ## Why This Exists
 
@@ -194,7 +167,19 @@ AI coding agents can produce a lot of code quickly, but teams still need simple 
 
 This project is intentionally narrower than a full end-to-end test framework. It is a receipt generator for runtime sanity.
 
-## Artifact Safety
+## Development
+
+```bash
+npm install
+npm run check
+npm run proof:example
+```
+
+Regenerate the README screenshot and GIF:
+
+```bash
+npm run assets:readme
+```
 
 Proof bundles can include screenshots and logs. Review them before sharing publicly.
 
