@@ -71,6 +71,18 @@ proof/
     network.ndjson
 ```
 
+## What Reviewers See
+
+`runtime-proof-kit` turns a coding-agent claim into a small evidence bundle a reviewer can scan quickly:
+
+![Reviewer-ready runtime proof](assets/readme/reviewer-receipt.png)
+
+- `summary.md`: PR-ready markdown with status, URL, checks, and artifact paths.
+- `proof.json`: machine-readable proof metadata for agents and CI.
+- `screenshot.png`: the rendered browser state.
+- `console.ndjson`: browser console messages and page errors.
+- `network.ndjson`: requests, responses, and failed requests.
+
 ## Check A Local App
 
 Start a local app, wait for it to respond, assert page text, and keep screenshots/logs for the handoff:
