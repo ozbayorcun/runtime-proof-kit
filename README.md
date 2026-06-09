@@ -43,7 +43,6 @@ Pick the fastest path:
 | --- | --- | --- |
 | Prove a URL once | You need a quick receipt | `npx --yes runtime-proof-kit check --url https://example.com --expect-text "Example Domain"` |
 | Add proof to a repo | You want repeatable local or CI checks | `npm install --save-dev runtime-proof-kit` |
-| Try unreleased `main` | You want the newest code before npm | `npm exec --yes --package github:ozbayorcun/runtime-proof-kit -- runtime-proof check ...` |
 
 Run a one-off proof from npm:
 
@@ -353,31 +352,6 @@ Duration: 1.42s
 }
 ```
 
-## GitHub Actions
-
-Use `runtime-proof` as a small runtime gate in CI:
-
-```yaml
-- run: npm ci
-- run: npx playwright install --with-deps chromium
-- run: npm run check
-- run: npx --yes runtime-proof-kit check --config runtime-proof.config.json
-```
-
-This repository's CI also uploads the generated `proof/` directory as a workflow artifact.
-
-## Why This Exists
-
-AI coding agents can produce a lot of code quickly, but teams still need simple evidence that the app:
-
-- starts cleanly
-- serves the intended page
-- renders in a browser
-- contains expected user-facing state
-- leaves behind artifacts someone else can inspect
-
-This project is intentionally narrower than a full end-to-end test framework. It is a receipt generator for runtime sanity.
-
 ## Development
 
 ```bash
@@ -393,6 +367,12 @@ npm run assets:readme
 ```
 
 Proof bundles can include screenshots and logs. Review them before sharing publicly.
+
+To try unreleased `main` before the next npm publish:
+
+```bash
+npm exec --yes --package github:ozbayorcun/runtime-proof-kit -- runtime-proof check --url https://example.com --expect-text "Example Domain"
+```
 
 ## Roadmap
 

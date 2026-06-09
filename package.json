@@ -1,6 +1,6 @@
 {
   "name": "runtime-proof-kit",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Runtime proof CLI for AI coding agents: browser screenshots, logs, and PR-ready proof reports.",
   "type": "module",
   "bin": {
